@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,7 +77,9 @@
             margin-bottom: 20px;
         }
 
-        input, textarea, select {
+        input,
+        textarea,
+        select {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
@@ -158,7 +161,8 @@
             transition: background 0.3s ease;
         }
 
-        .tabs a.active, .tabs a:hover {
+        .tabs a.active,
+        .tabs a:hover {
             background-color: var(--button-color);
             color: white;
         }
@@ -186,6 +190,7 @@
         }
     </style>
 </head>
+
 <body data-theme="light">
     <header>
         <h1>VoxelMods</h1>
@@ -333,7 +338,7 @@
             fileList.innerHTML = '';
             document.getElementById('content-title').innerText = `Available ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}s`;
 
-            database.ref('mods').on('value', (snapshot) => {
+            database.ref('mods').once('value', (snapshot) => {
                 snapshot.forEach((childSnapshot) => {
                     const data = childSnapshot.val();
                     if (data.type === selectedType) {
