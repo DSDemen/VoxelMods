@@ -230,6 +230,26 @@
         .upload-container.active {
             display: block;
         }
+        .square {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            opacity: 0.8;
+            animation: fall 5s linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
@@ -451,6 +471,25 @@
                 }
             });
         }
+
+        function createFallingSquare() {
+            const square = document.createElement('div');
+            square.classList.add('square');
+
+            // Позиционирование квадрата случайным образом
+            square.style.left = Math.random() * window.innerWidth + 'px';
+            square.style.animationDuration = (Math.random() * 2 + 3) + 's'; // Скорость падения
+
+            // Добавляем квадрат в body
+            document.body.appendChild(square);
+
+            // Удаление квадрата после завершения анимации
+            square.addEventListener('animationend', () => {
+                square.remove();
+            });
+        }
+
+        setInterval(createFallingSquare, 500);
 
         // Login
         document.getElementById('login-btn').addEventListener('click', async () => {
