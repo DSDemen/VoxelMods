@@ -182,10 +182,50 @@
 
         .login-container {
             display: none;
-            margin-top: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
 
         .login-container.active {
+            display: flex;
+        }
+
+        .login-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 300px;
+        }
+
+        .login-box h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .close-login {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .upload-container {
+            display: none;
+        }
+
+        .upload-container.active {
             display: block;
         }
     </style>
@@ -205,27 +245,29 @@
 
     <div class="container">
         <!-- Upload Form -->
-        <h2>Upload Your Content</h2>
-        <input type="text" id="mod-name" placeholder="Name of Mod/Pack" required>
-        <textarea id="mod-description" placeholder="Description" required></textarea>
-        <select id="mod-type">
-            <option value="mod">Mod</option>
-            <option value="texturepack">Texture Pack</option>
-            <option value="modpack">Build</option>
-        </select>
+        <div class="upload-container" id="upload-container">
+            <h2>Upload Your Content</h2>
+            <input type="text" id="mod-name" placeholder="Name of Mod/Pack" required>
+            <textarea id="mod-description" placeholder="Description" required></textarea>
+            <select id="mod-type">
+                <option value="mod">Mod</option>
+                <option value="texturepack">Texture Pack</option>
+                <option value="modpack">Build</option>
+            </select>
 
-        <div class="file-input-group">
-            <div>
-                <label class="file-label" for="mod-file">Upload Mod File</label>
-                <input type="file" id="mod-file" accept=".zip,.rar" required>
+            <div class="file-input-group">
+                <div>
+                    <label class="file-label" for="mod-file">Upload Mod File</label>
+                    <input type="file" id="mod-file" accept=".zip,.rar" required>
+                </div>
+                <div>
+                    <label class="file-label" for="mod-image">Upload Mod Image</label>
+                    <input type="file" id="mod-image" accept="image/*" required>
+                </div>
             </div>
-            <div>
-                <label class="file-label" for="mod-image">Upload Mod Image</label>
-                <input type="file" id="mod-image" accept="image/*" required>
-            </div>
+
+            <button id="upload-btn">Upload</button>
         </div>
-
-        <button id="upload-btn">Upload</button>
 
         <hr>
 
@@ -235,12 +277,15 @@
 
         <!-- Login/Register Form -->
         <div class="login-container" id="login-container">
-            <h2>Login / Register</h2>
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button id="login-btn">Login</button>
-            <button id="register-btn">Register</button>
-            <button id="logout-btn" style="display:none;">Logout</button>
+            <div class="login-box">
+                <button class="close-login" id="close-login">&times;</button>
+                <h2>Login / Register</h2>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button id="login-btn">Login</button>
+                <button id="register-btn">Register</button>
+                <button id="logout-btn" style="display:none;">Logout</button>
+            </div>
         </div>
     </div>
 
@@ -248,8 +293,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
-
     <script>
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDMcOR_Zt9zHQX-m-S8OhkCZhVD6-DdCzM",
             authDomain: "voxelmods-187d1.firebaseapp.com",
@@ -260,30 +305,36 @@
             measurementId: "G-VZQZX1MNG9"
         };
 
+        // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        const storage = firebase.storage();
         const database = firebase.database();
+        const storage = firebase.storage();
 
-        const themeToggleBtn = document.getElementById('theme-toggle');
         const body = document.body;
         const uploadBtn = document.getElementById('upload-btn');
         const fileList = document.getElementById('file-list');
         const loginContainer = document.getElementById('login-container');
+        const closeLoginBtn = document.getElementById('close-login');
         const toggleLoginBtn = document.getElementById('toggle-login');
         const logoutBtn = document.getElementById('logout-btn');
+        const uploadContainer = document.getElementById('upload-container');
         const tabs = document.querySelectorAll('.tab-link');
 
         let currentUser = null;
 
         // Toggle Theme
-        themeToggleBtn.addEventListener('click', () => {
+        document.getElementById('theme-toggle').addEventListener('click', () => {
             body.dataset.theme = body.dataset.theme === 'light' ? 'dark' : 'light';
         });
 
         // Toggle Login/Register
         toggleLoginBtn.addEventListener('click', () => {
             loginContainer.classList.toggle('active');
+        });
+
+        closeLoginBtn.addEventListener('click', () => {
+            loginContainer.classList.remove('active');
         });
 
         // Upload Mod
@@ -360,6 +411,8 @@
                     }
                 });
             });
+            // Hide upload form if not logged in
+            uploadContainer.style.display = currentUser ? 'block' : 'none';
         }
 
         // Rate Mod
