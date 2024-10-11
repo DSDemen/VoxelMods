@@ -230,26 +230,26 @@
         .upload-container.active {
             display: block;
         }
-        .square {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 5px;
-            opacity: 0.8;
-            animation: fall 5s linear infinite;
-        }
-
-        @keyframes fall {
-            0% {
-                transform: translateY(-50);
-                opacity: 1;
+        @keyframes jump {
+                0% {
+                transform: translateY(100vh); /* Начальная позиция снизу */
+            }
+            50% {
+                transform: translateY(0); /* Подъем на максимальную высоту */
             }
             100% {
-                transform: translateY(100vh);
-                opacity: 0;
+                transform: translateY(100vh); /* Возврат вниз */
             }
         }
+
+     .square {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        background-size: cover;
+        background-position: center;
+        animation: jump ease-in-out;
+    }
     </style>
 </head>
 
@@ -472,23 +472,38 @@
             });
         }
 
-        function createFallingSquare() {
+        const imageList = [
+            '1a.png',
+            '2a.png',
+            '3a.png',
+            '4a.png',
+            '5a.png'
+            // Добавьте сюда свои пути к изображениям
+        ];
+
+        function createJumpingSquare() {
             const square = document.createElement('div');
             square.classList.add('square');
 
-            // Позиционирование квадрата случайным образом по горизонтали
+            // Позиционирование куба случайным образом по горизонтали
             square.style.left = Math.random() * window.innerWidth + 'px';
 
-            // Позиционируем квадрат выше верхней границы экрана
-            square.style.top = '-50px';
+            // Скорость прыжка и падения
+            const duration = Math.random() * 2 + 2; // от 2 до 4 секунд
+            square.style.animationDuration = `${duration}s`;
 
-            // Скорость падения квадрата
-            square.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            // Задержка перед анимацией
+            const delay = Math.random() * 2; // до 2 секунд задержки
+            square.style.animationDelay = `${delay}s`;
 
-            // Добавляем квадрат в body
+            // Случайный выбор изображения
+            const randomImage = imageList[Math.floor(Math.random() * imageList.length)];
+            square.style.backgroundImage = `url(${randomImage})`;
+
+            // Добавляем куб в body
             document.body.appendChild(square);
 
-            // Удаление квадрата после завершения анимации
+            // Удаление куба после завершения анимации
             square.addEventListener('animationend', () => {
                 square.remove();
             });
