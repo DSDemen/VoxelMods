@@ -5,15 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoxelMods</title>
     <style>
+        :root {
+            --background-color: #ffffff;
+            --text-color: #000000;
+            --button-color: #007bff;
+            --button-hover-color: #0056b3;
+            --header-color: #333;
+        }
+
+        [data-theme="dark"] {
+            --background-color: #1e1e1e;
+            --text-color: #ffffff;
+            --button-color: #28a745;
+            --button-hover-color: #218838;
+            --header-color: #444;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f0f0;
+            background-color: var(--background-color);
+            color: var(--text-color);
             margin: 0;
             padding: 0;
         }
 
         header {
-            background-color: #333;
+            background-color: var(--header-color);
             color: white;
             padding: 15px;
             display: flex;
@@ -43,29 +60,10 @@
             background-color: #555;
         }
 
-        .auth-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .auth-buttons button {
-            background-color: #28a745;
-            border: none;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .auth-buttons button:hover {
-            background-color: #218838;
-        }
-
         .container {
             max-width: 1200px;
             margin: 40px auto;
-            background-color: white;
+            background-color: var(--background-color);
             padding: 30px;
             box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
@@ -83,10 +81,12 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1em;
+            color: var(--text-color);
+            background-color: var(--background-color);
         }
 
         button {
-            background-color: #007bff;
+            background-color: var(--button-color);
             color: white;
             border: none;
             padding: 10px 15px;
@@ -97,7 +97,7 @@
         }
 
         button:hover {
-            background-color: #0056b3;
+            background-color: var(--button-hover-color);
         }
 
         .file-input-group {
@@ -108,6 +108,11 @@
 
         .file-input-group input {
             width: 48%;
+        }
+
+        .file-label {
+            font-size: 0.9em;
+            color: var(--text-color);
         }
 
         .file-list {
@@ -152,16 +157,25 @@
         }
 
         .tabs a.active, .tabs a:hover {
-            background-color: #007bff;
+            background-color: var(--button-color);
             color: white;
         }
 
         .rating {
             color: #f39c12;
         }
+
+        .theme-toggle {
+            cursor: pointer;
+            padding: 10px;
+            background-color: var(--button-color);
+            border-radius: 5px;
+            color: white;
+            margin-left: 20px;
+        }
     </style>
 </head>
-<body>
+<body data-theme="light">
     <header>
         <h1>VoxelMods</h1>
         <nav>
@@ -170,10 +184,9 @@
             <a href="#" class="tab-link" data-type="modpack">Builds</a>
         </nav>
         <div class="auth-buttons">
-            <button id="login-btn">Login</button>
-            <button id="register-btn">Register</button>
-            <button id="logout-btn" style="display: none;">Logout</button>
+            <a href="login.html">Login / Register</a>
         </div>
+        <div class="theme-toggle" id="theme-toggle">Toggle Theme</div>
     </header>
 
     <div class="container">
@@ -188,8 +201,14 @@
         </select>
 
         <div class="file-input-group">
-            <input type="file" id="mod-file" accept=".zip,.rar" title="Upload Mod File">
-            <input type="file" id="mod-image" accept="image/*" title="Upload Mod Image">
+            <div>
+                <label class="file-label" for="mod-file">Upload Mod File</label>
+                <input type="file" id="mod-file" accept=".zip,.rar">
+            </div>
+            <div>
+                <label class="file-label" for="mod-image">Upload Mod Image</label>
+                <input type="file" id="mod-image" accept="image/*">
+            </div>
         </div>
 
         <button id="upload-btn" style="display:none;">Upload</button>
@@ -222,95 +241,21 @@
         const storage = firebase.storage();
         const database = firebase.database();
 
-        const loginBtn = document.getElementById('login-btn');
-        const registerBtn = document.getElementById('register-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const uploadBtn = document.getElementById('upload-btn');
-        const fileList = document.getElementById('file-list');
-        const tabs = document.querySelectorAll('.tab-link');
-        const contentTitle = document.getElementById('content-title');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const body = document.body;
 
-        let currentUser = null;
-
-        // Register User
-        registerBtn.addEventListener('click', () => {
-            const email = prompt('Enter your email:');
-            const password = prompt('Enter your password:');
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => alert('Registration successful!'))
-                .catch(error => alert(error.message));
-        });
-
-        // Login User
-        loginBtn.addEventListener('click', () => {
-            const email = prompt('Enter your email:');
-            const password = prompt('Enter your password:');
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    alert('Login successful!');
-                    currentUser = userCredential.user;
-                    logoutBtn.style.display = 'inline';
-                    loginBtn.style.display = 'none';
-                    registerBtn.style.display = 'none';
-                    uploadBtn.style.display = 'inline';
-                })
-                .catch(error => alert(error.message));
-        });
-
-        // Logout User
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut()
-                .then(() => {
-                    alert('Logged out!');
-                    logoutBtn.style.display = 'none';
-                    loginBtn.style.display = 'inline';
-                    registerBtn.style.display = 'inline';
-                    uploadBtn.style.display = 'none';
-                    currentUser = null;
-                });
-        });
-
-        // Upload Mod
-        uploadBtn.addEventListener('click', () => {
-            const name = document.getElementById('mod-name').value;
-            const description = document.getElementById('mod-description').value;
-            const type = document.getElementById('mod-type').value;
-            const modFile = document.getElementById('mod-file').files[0];
-            const modImage = document.getElementById('mod-image').files[0];
-
-            if (!name || !description || !modFile || !modImage) {
-                alert('Please fill all fields!');
-                return;
-            }
-
-            const fileRef = storage.ref('mods/' + modFile.name);
-            const imageRef = storage.ref('images/' + modImage.name);
-
-            fileRef.put(modFile).then(() => {
-                fileRef.getDownloadURL().then((fileUrl) => {
-                    imageRef.put(modImage).then(() => {
-                        imageRef.getDownloadURL().then((imageUrl) => {
-                            const newModRef = database.ref('mods').push();
-                            newModRef.set({
-                                name: name,
-                                description: description,
-                                type: type,
-                                fileUrl: fileUrl,
-                                imageUrl: imageUrl,
-                                rating: 0,
-                                votes: 0
-                            });
-                            alert('Mod uploaded successfully!');
-                            renderMods(type);
-                        });
-                    });
-                });
-            });
+        // Toggle Theme
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
         });
 
         // Render Mods
         function renderMods(selectedType = 'mod') {
+            const fileList = document.getElementById('file-list');
             fileList.innerHTML = '';
+            const contentTitle = document.getElementById('content-title');
             contentTitle.innerText = selectedType.charAt(0).toUpperCase() + selectedType.slice(1) + 's';
 
             database.ref('mods').on('value', (snapshot) => {
@@ -337,26 +282,32 @@
             });
         }
 
-        // Rate Mod
+        // Rate Mod (Fix duplication)
         function rateMod(modId, vote) {
+            const user = auth.currentUser;
+            if (!user) {
+                alert('You need to be logged in to vote!');
+                return;
+            }
+
             const modRef = database.ref('mods/' + modId);
-            modRef.once('value', (snapshot) => {
-                const data = snapshot.val();
-                const newVotes = data.votes + 1;
-                const newRating = ((data.rating * data.votes) + vote) / newVotes;
-                modRef.update({ rating: newRating, votes: newVotes });
+            const userVotesRef = database.ref('userVotes/' + user.uid + '/' + modId);
+
+            userVotesRef.once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    alert('You have already voted for this mod!');
+                } else {
+                    modRef.once('value', (snapshot) => {
+                        const data = snapshot.val();
+                        const newVotes = data.votes + 1;
+                        const newRating = ((data.rating * data.votes) + vote) / newVotes;
+
+                        modRef.update({ rating: newRating, votes: newVotes });
+                        userVotesRef.set(true); // Record the user vote
+                    });
+                }
             });
         }
-
-        // Tab Switching
-        tabs.forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                e.preventDefault();
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                renderMods(tab.getAttribute('data-type'));
-            });
-        });
 
         // Initial Render
         renderMods();
