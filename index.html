@@ -242,7 +242,7 @@
 
         @keyframes fall {
             0% {
-                transform: translateY(0);
+                transform: translateY(-50);
                 opacity: 1;
             }
             100% {
@@ -476,9 +476,14 @@
             const square = document.createElement('div');
             square.classList.add('square');
 
-            // Позиционирование квадрата случайным образом
+            // Позиционирование квадрата случайным образом по горизонтали
             square.style.left = Math.random() * window.innerWidth + 'px';
-            square.style.animationDuration = (Math.random() * 2 + 3) + 's'; // Скорость падения
+
+            // Позиционируем квадрат выше верхней границы экрана
+            square.style.top = '-50px';
+
+            // Скорость падения квадрата
+            square.style.animationDuration = (Math.random() * 2 + 3) + 's';
 
             // Добавляем квадрат в body
             document.body.appendChild(square);
@@ -489,7 +494,7 @@
             });
         }
 
-        setInterval(createFallingSquare, 500);
+        setInterval(createFallingSquare, 1500);
 
         // Login
         document.getElementById('login-btn').addEventListener('click', async () => {
