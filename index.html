@@ -11,6 +11,7 @@
             --button-color: #007bff;
             --button-hover-color: #0056b3;
             --header-color: #333;
+            --mod-background-color: #f9f9f9;
         }
 
         [data-theme="dark"] {
@@ -19,6 +20,7 @@
             --button-color: #28a745;
             --button-hover-color: #218838;
             --header-color: #444;
+            --mod-background-color: #333;
         }
 
         body {
@@ -123,7 +125,7 @@
 
         .file-list li {
             padding: 20px;
-            background-color: #f9f9f9;
+            background-color: var(--mod-background-color);
             margin-bottom: 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
@@ -173,27 +175,34 @@
             color: white;
             margin-left: 20px;
         }
+
+        .login-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .login-container.active {
+            display: block;
+        }
     </style>
 </head>
 <body data-theme="light">
     <header>
         <h1>VoxelMods</h1>
         <nav>
-            <a href="#" class="tab-link" data-type="mod">Mods</a>
+            <a href="#" class="tab-link active" data-type="mod">Mods</a>
             <a href="#" class="tab-link" data-type="texturepack">Texture Packs</a>
             <a href="#" class="tab-link" data-type="modpack">Builds</a>
+            <a href="#" id="toggle-login">Login / Register</a>
         </nav>
-        <div class="auth-buttons">
-            <a href="login.html">Login / Register</a>
-        </div>
         <div class="theme-toggle" id="theme-toggle">Toggle Theme</div>
     </header>
 
     <div class="container">
         <!-- Upload Form -->
         <h2>Upload Your Content</h2>
-        <input type="text" id="mod-name" placeholder="Name of Mod/Pack">
-        <textarea id="mod-description" placeholder="Description"></textarea>
+        <input type="text" id="mod-name" placeholder="Name of Mod/Pack" required>
+        <textarea id="mod-description" placeholder="Description" required></textarea>
         <select id="mod-type">
             <option value="mod">Mod</option>
             <option value="texturepack">Texture Pack</option>
@@ -203,21 +212,31 @@
         <div class="file-input-group">
             <div>
                 <label class="file-label" for="mod-file">Upload Mod File</label>
-                <input type="file" id="mod-file" accept=".zip,.rar">
+                <input type="file" id="mod-file" accept=".zip,.rar" required>
             </div>
             <div>
                 <label class="file-label" for="mod-image">Upload Mod Image</label>
-                <input type="file" id="mod-image" accept="image/*">
+                <input type="file" id="mod-image" accept="image/*" required>
             </div>
         </div>
 
-        <button id="upload-btn" style="display:none;">Upload</button>
+        <button id="upload-btn">Upload</button>
 
         <hr>
 
         <!-- List of Mods -->
         <h2 id="content-title">Available Mods</h2>
         <ul id="file-list" class="file-list"></ul>
+
+        <!-- Login/Register Form -->
+        <div class="login-container" id="login-container">
+            <h2>Login / Register</h2>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button id="login-btn">Login</button>
+            <button id="register-btn">Register</button>
+            <button id="logout-btn" style="display:none;">Logout</button>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -243,20 +262,75 @@
 
         const themeToggleBtn = document.getElementById('theme-toggle');
         const body = document.body;
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileList = document.getElementById('file-list');
+        const loginContainer = document.getElementById('login-container');
+        const toggleLoginBtn = document.getElementById('toggle-login');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        let currentUser = null;
 
         // Toggle Theme
         themeToggleBtn.addEventListener('click', () => {
-            const currentTheme = body.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            body.setAttribute('data-theme', newTheme);
+            body.dataset.theme = body.dataset.theme === 'light' ? 'dark' : 'light';
+        });
+
+        // Toggle Login/Register
+        toggleLoginBtn.addEventListener('click', () => {
+            loginContainer.classList.toggle('active');
+        });
+
+        // Upload Mod
+        uploadBtn.addEventListener('click', async () => {
+            const modName = document.getElementById('mod-name').value;
+            const modDescription = document.getElementById('mod-description').value;
+            const modType = document.getElementById('mod-type').value;
+            const modFile = document.getElementById('mod-file').files[0];
+            const modImage = document.getElementById('mod-image').files[0];
+
+            if (!modName || !modDescription || !modFile || !modImage) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            const userId = currentUser ? currentUser.uid : "guest";
+            const modRef = database.ref('mods').push();
+            const imageRef = storage.ref(`images/${modImage.name}`);
+            const fileRef = storage.ref(`files/${modFile.name}`);
+
+            try {
+                await imageRef.put(modImage);
+                const imageUrl = await imageRef.getDownloadURL();
+
+                await fileRef.put(modFile);
+                const fileUrl = await fileRef.getDownloadURL();
+
+                await modRef.set({
+                    name: modName,
+                    description: modDescription,
+                    type: modType,
+                    fileUrl: fileUrl,
+                    imageUrl: imageUrl,
+                    rating: 0,
+                    votes: 0,
+                    uid: userId
+                });
+
+                document.getElementById('mod-name').value = '';
+                document.getElementById('mod-description').value = '';
+                document.getElementById('mod-file').value = '';
+                document.getElementById('mod-image').value = '';
+
+                renderMods();
+            } catch (error) {
+                console.error("Error uploading file:", error);
+            }
         });
 
         // Render Mods
         function renderMods(selectedType = 'mod') {
-            const fileList = document.getElementById('file-list');
             fileList.innerHTML = '';
-            const contentTitle = document.getElementById('content-title');
-            contentTitle.innerText = selectedType.charAt(0).toUpperCase() + selectedType.slice(1) + 's';
+            document.getElementById('content-title').innerText = `Available ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}s`;
 
             database.ref('mods').on('value', (snapshot) => {
                 snapshot.forEach((childSnapshot) => {
@@ -270,7 +344,7 @@
                                     <strong>${data.name}</strong> (${data.type})<br>
                                     ${data.description}<br>
                                     <a href="${data.fileUrl}" target="_blank">Download</a><br>
-                                    <span class="rating">Rating: ${data.rating} (${data.votes} votes)</span><br>
+                                    <span class="rating">Rating: ${data.rating.toFixed(1)} (${data.votes} votes)</span><br>
                                     <button onclick="rateMod('${childSnapshot.key}', 1)">👍</button>
                                     <button onclick="rateMod('${childSnapshot.key}', -1)">👎</button>
                                 </div>
@@ -282,7 +356,7 @@
             });
         }
 
-        // Rate Mod (Fix duplication)
+        // Rate Mod
         function rateMod(modId, vote) {
             const user = auth.currentUser;
             if (!user) {
@@ -308,6 +382,48 @@
                 }
             });
         }
+
+        // Login
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                currentUser = auth.currentUser;
+                alert('Login successful!');
+                toggleLoginBtn.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                loginContainer.classList.remove('active');
+                renderMods();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Register
+        document.getElementById('register-btn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
+                alert('Registration successful! You can now log in.');
+                loginContainer.classList.remove('active');
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', async () => {
+            await auth.signOut();
+            currentUser = null;
+            alert('You have been logged out.');
+            toggleLoginBtn.style.display = 'block';
+            logoutBtn.style.display = 'none';
+            renderMods();
+        });
 
         // Initial Render
         renderMods();
