@@ -357,6 +357,8 @@
             const modRef = database.ref('mods').push();
             const imageRef = storage.ref(`images/${modImage.name}`);
             const fileRef = storage.ref(`files/${modFile.name}`);
+            const email = auth.currentUser.email;
+            const username = email.split('@')[0];
 
             try {
                 await imageRef.put(modImage);
@@ -373,7 +375,8 @@
                     imageUrl: imageUrl,
                     rating: 0,
                     votes: 0,
-                    uid: userId
+                    uid: userId,
+                    username: username
                 });
 
                 document.getElementById('mod-name').value = '';
@@ -402,6 +405,7 @@
                                 <img src="${data.imageUrl}" alt="${data.name}">
                                 <div>
                                     <strong>${data.name}</strong> (${data.type})<br>
+                                    ${data.username}<br>
                                     ${data.description}<br>
                                     <a href="${data.fileUrl}" target="_blank">Download</a><br>
                                     <span class="rating">Rating: ${data.rating.toFixed(1)} (${data.votes} votes)</span><br>
@@ -505,12 +509,10 @@
                 currentUser = user;
                 toggleLoginBtn.style.display = 'none';  // Скрываем кнопку Login/Register
                 logoutBtn.style.display = 'block';  // Показываем кнопку Logout
-                renderMods();  // Отображаем контент в зависимости от статуса пользователя
             } else {
                 currentUser = null;
                 toggleLoginBtn.style.display = 'block';  // Показываем кнопку Login/Register
                 logoutBtn.style.display = 'none';  // Скрываем кнопку Logout
-                renderMods();  // Отображаем контент для неавторизованного пользователя
             }
         });
 
