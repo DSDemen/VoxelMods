@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoxelMods</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .file-list {
+            list-style: none;
+            padding: 0;
+        }
+        .file-list li {
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>VoxelMods</h1>
+        <p>Mods, Texture Packs, and Modpacks for Everyone</p>
+    </header>
+
+    <div class="container">
+        <!-- Registration & Login Form -->
+        <h2>Register / Login</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button id="register-btn">Register</button>
+        <button id="login-btn">Login</button>
+        <button id="logout-btn" style="display:none;">Logout</button>
+
+        <hr>
+
+        <!-- Upload Form -->
+        <h2>Upload Your Content</h2>
+        <input type="text" id="mod-name" placeholder="Name of Mod/Pack">
+        <textarea id="mod-description" placeholder="Description"></textarea>
+        <select id="mod-type">
+            <option value="mod">Mod</option>
+            <option value="texturepack">Texture Pack</option>
+            <option value="modpack">Modpack</option>
+        </select>
+        <input type="file" id="mod-file">
+        <button id="upload-btn" style="display:none;">Upload</button>
+
+        <hr>
+
+        <!-- List of Mods -->
+        <h2>Available Downloads</h2>
+        <ul id="file-list" class="file-list"></ul>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDMcOR_Zt9zHQX-m-S8OhkCZhVD6-DdCzM",
+            authDomain: "voxelmods-187d1.firebaseapp.com",
+            projectId: "voxelmods-187d1",
+            storageBucket: "voxelmods-187d1.appspot.com",
+            messagingSenderId: "937290696547",
+            appId: "1:937290696547:web:59e6f13185442f6744b556",
+            measurementId: "G-VZQZX1MNG9"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const storage = firebase.storage();
+        const firestore = firebase.firestore();
+
+        const registerBtn = document.getElementById('register-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileList = document.getElementById('file-list');
+
+        // Register User
+        registerBtn.addEventListener('click', () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(() => alert('Registration successful!'))
+                .catch(error => alert(error.message));
+        });
+
+        // Login User
+        loginBtn.addEventListener('click', () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    alert('Login successful!');
+                    logoutBtn.style.display = 'inline';
+                    uploadBtn.style.display = 'inline';
+                })
+                .catch(error => alert(error.message));
+        });
+
+        // Logout User
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut()
+                .then(() => {
+                    alert('Logged out!');
+                    logoutBtn.style.display = 'none';
+                    uploadBtn.style.display = 'none';
+                });
+        });
+
+        // Upload File
+        uploadBtn.addEventListener('click', () => {
+            const modName = document.getElementById('mod-name').value;
+            const modDescription = document.getElementById('mod-description').value;
+            const modType = document.getElementById('mod-type').value;
+            const file = document.getElementById('mod-file').files[0];
+
+            if (!file || !modName || !modDescription || !modType) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            const storageRef = storage.ref(`mods/${file.name}`);
+            const uploadTask = storageRef.put(file);
+
+            uploadTask.on('state_changed', 
+                (snapshot) => {},
+                (error) => { alert(error.message); },
+                () => {
+                    uploadTask.snapshot.ref.getDownloadURL()
+                        .then(downloadURL => {
+                            firestore.collection('mods').add({
+                                name: modName,
+                                description: modDescription,
+                                type: modType,
+                                fileUrl: downloadURL,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            alert('Mod uploaded successfully!');
+                        });
+                }
+            );
+        });
+
+        // Fetch and Display Files
+        firestore.collection('mods').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+            fileList.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <strong>${data.name}</strong> (${data.type})<br>
+                    ${data.description}<br>
+                    <a href="${data.fileUrl}" target="_blank">Download</a>
+                `;
+                fileList.appendChild(li);
+            });
+        });
+    </script>
+</body>
+</html>
