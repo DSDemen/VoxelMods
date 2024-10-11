@@ -240,6 +240,7 @@
             <a href="#" class="tab-link active" data-type="mod">Mods</a>
             <a href="#" class="tab-link" data-type="texturepack">Texture Packs</a>
             <a href="#" class="tab-link" data-type="modpack">Builds</a>
+            <a href="#" class="tab-link" data-type="shader">Shaders</a>
             <a href="#" id="toggle-login">Login / Register</a>
         </nav>
         <div class="theme-toggle" id="theme-toggle">Toggle Theme</div>
@@ -249,21 +250,22 @@
         <!-- Upload Form -->
         <div class="upload-container" id="upload-container">
             <h2>Upload Your Content</h2>
-            <input type="text" id="mod-name" placeholder="Name of Mod/Pack" required>
+            <input type="text" id="mod-name" placeholder="Name of Mod/Pack/Build/Shader" required>
             <textarea id="mod-description" placeholder="Description" required></textarea>
             <select id="mod-type">
                 <option value="mod">Mod</option>
                 <option value="texturepack">Texture Pack</option>
                 <option value="modpack">Build</option>
+                <option value="shader">Shader</option>
             </select>
 
             <div class="file-input-group">
                 <div>
-                    <label class="file-label" for="mod-file">Upload Mod File</label>
+                    <label class="file-label" for="mod-file">Upload File</label>
                     <input type="file" id="mod-file" accept=".zip,.rar" required>
                 </div>
                 <div>
-                    <label class="file-label" for="mod-image">Upload Mod Image</label>
+                    <label class="file-label" for="mod-image">Upload Logo Image</label>
                     <input type="file" id="mod-image" accept="image/*" required>
                 </div>
             </div>
