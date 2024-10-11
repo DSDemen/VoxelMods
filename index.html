@@ -267,6 +267,7 @@
         const loginContainer = document.getElementById('login-container');
         const toggleLoginBtn = document.getElementById('toggle-login');
         const logoutBtn = document.getElementById('logout-btn');
+        const tabs = document.querySelectorAll('.tab-link');
 
         let currentUser = null;
 
@@ -423,6 +424,17 @@
             toggleLoginBtn.style.display = 'block';
             logoutBtn.style.display = 'none';
             renderMods();
+        });
+
+        // Tab Switch
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (event) => {
+                event.preventDefault();
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const type = tab.getAttribute('data-type');
+                renderMods(type);
+            });
         });
 
         // Initial Render
