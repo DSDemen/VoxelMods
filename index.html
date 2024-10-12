@@ -537,22 +537,30 @@
         }
 
         function checkMaintenance() {
+            console.log("Проверка состояния тех. работ..."); // Добавлено логирование
             database.ref('undermaint').on('value', (snapshot) => {
-                const isUnderMaintenance = snapshot.val();
+                if (snapshot.exists()) {
+                    const isUnderMaintenance = snapshot.val();
+                    console.log('Значение undermaint из Firebase:', isUnderMaintenance); // Логируем значение
 
-                if (isUnderMaintenance) {
-                    // Если сайт на тех. работах, показываем экран
-                    document.querySelector('.maintenance-screen').style.display = 'flex';
-                    console.log('Сайт на тех. работах');
-            
-                    setTimeout(checkMaintenance, 500);
+                    if (isUnderMaintenance) {
+                        // Если сайт на тех. работах, показываем экран
+                        document.querySelector('.maintenance-screen').style.display = 'flex';
+                        console.log('Сайт на тех. работах');
+                        setTimeout(checkMaintenance, 500);
+                    } else {
+                        // Если тех. работ нет, скрываем экран и показываем сайт
+                        document.querySelector('.maintenance-screen').style.display = 'none';
+                        console.log('Сайт работает нормально');
+                    }
                 } else {
-                    // Если тех. работ нет, скрываем экран и показываем сайт
-                    document.querySelector('.maintenance-screen').style.display = 'none';
-                    console.log('Сайт работает нормально');
+                    console.log("Данные undermaint не найдены в Firebase.");
                 }
+            }, (error) => {
+                console.error("Ошибка при получении данных из Firebase:", error); // Логируем ошибку
             });
         }
+
 
         setInterval(createFallingSquare, 1500);
 
