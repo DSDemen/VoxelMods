@@ -541,7 +541,7 @@
             database.ref('undermaint').on('value', (snapshot) => {
                 if (snapshot.exists()) {
                     const isUnderMaintenance = snapshot.val();
-                    console.log('Значение undermaint из Firebase:', isUnderMaintenance); // Логируем значение
+                  //  console.log('Значение undermaint из Firebase:', isUnderMaintenance); // Логируем значение
 
                     if (isUnderMaintenance) {
                         // Если сайт на тех. работах, показываем экран
