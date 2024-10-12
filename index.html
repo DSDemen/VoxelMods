@@ -224,7 +224,6 @@
         }
 
         .upload-container {
-            background-color: transparent !important;
             display: none;
         }
 
@@ -249,17 +248,6 @@
             background-size: cover;
             background-position: center;
             animation: fall linear;
-            z-index: 1; /* Более низкий z-index для квадратов */
-        }
-        header,
-        .container,
-        .upload-container,
-        h2 {
-            position: relative; /* Устанавливаем, чтобы z-index применился */
-            z-index: 10; /* Более высокий z-index для элементов интерфейса */
-        }
-        [data-theme="dark"] .upload-container {
-            background-color: transparent !important; /* Устанавливаем прозрачный фон для upload-container */
         }
     </style>
 </head>
