@@ -537,7 +537,7 @@
         }
 
         function checkMaintenance() {
-            db.ref('undermaint').on('value', (snapshot) => {
+            database.ref('undermaint').on('value', (snapshot) => {
                 const isUnderMaintenance = snapshot.val();
 
                 if (isUnderMaintenance) {
@@ -545,8 +545,7 @@
                     document.querySelector('.maintenance-screen').style.display = 'flex';
                     console.log('Сайт на тех. работах');
             
-                    // Продолжаем проверку каждые 5 секунд, пока тех. работы активны
-                    setTimeout(checkMaintenance, 1000);
+                    setTimeout(checkMaintenance, 500);
                 } else {
                     // Если тех. работ нет, скрываем экран и показываем сайт
                     document.querySelector('.maintenance-screen').style.display = 'none';
